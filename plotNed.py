@@ -1,7 +1,5 @@
 import re
 import matplotlib.pyplot as plt
-
-# Step 1: Read the text file
 with open('your_file.txt', 'r') as file:
     data = file.read()
 
@@ -13,8 +11,6 @@ matches = re.findall(pattern, data)
 x_vals = [float(match[0]) for match in matches]
 y_vals = [float(match[1]) for match in matches]
 z_vals = [float(match[2]) for match in matches]
-
-# Step 3: Plot the values
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.scatter(x_vals, y_vals, z_vals, c='b', marker='o')

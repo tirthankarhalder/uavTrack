@@ -1,10 +1,10 @@
 from PIL import Image
 import glob
-folder_path = "./visualization/drone_data_2/*.png"
+folder_path = "./ned/*.png"
 image_files = sorted(glob.glob(folder_path))
 frames = [Image.open(img) for img in image_files]
 frames[0].save(
-    "output10_10m.gif",
+    "ned2923.gif",
     save_all=True,
     append_images=frames[1:],
     duration=10,  # Duration between frames in milliseconds

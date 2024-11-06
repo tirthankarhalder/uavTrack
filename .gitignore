@@ -1,5 +1,8 @@
 data/
+telemetry_data/
 visualization/
+ned/
 tempCodeRunnerFile.py
 .vscode
 **/__pycache__/
+*.gif
