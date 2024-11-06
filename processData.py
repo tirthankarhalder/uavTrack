@@ -9,6 +9,8 @@ from sklearn.cluster import DBSCAN
 # from matplotlib.cm import cm
 # from scipy.stats import mode
 from datetime import datetime,timedelta
+from dateutil.relativedelta import relativedelta
+
 
 def calculate_centroids(data, labels):
     unique_labels = np.unique(labels)
@@ -83,54 +85,39 @@ if __name__ == "__main__":
     time_frames = []
     for index,row in radarData.iterrows():
         time_current = start_time_obj+timedelta(seconds=frameID*(100)/1000)
-        time_frames.append(time_current.strftime('%Y-%m-%d %H:%M:%S.%f'))
-        radarData.loc[index, 'datetime']  = time_current.strftime('%Y-%m-%d %H:%M:%S.%f')
+        datetime_obj = pd.to_datetime(time_current, format='%Y-%d-%m %H:%M:%S.%f')
+        new_datetime_obj = datetime_obj + relativedelta(months=1)
+        new_timestamp = new_datetime_obj.strftime('%Y-%m-%d %H:%M:%S.%f')
+        time_frames.append(time_current.strftime('%Y-%d-%m %H:%M:%S.%f'))
+        radarData.loc[index, 'datetime']  = time_current.strftime('%Y-%d-%m %H:%M:%S.%f') 
+
         frameID +=1
     print("Dropping NAN rows")
     radarData = radarData.dropna()
     for index, row in radarData.iterrows():
         if sum(radarData["dopplerIdx"][index]) == 0:
             radarData.drop(index=index)
-    radarData.to_csv("radarData.csv",index=False)
+    # radarData.to_csv("radarData.csv",index=False)
     teleData = pd.read_csv('./telemetry_data/2024-11-05_17_29_23_telemtry.csv')
     teleData = teleData[["datetime","x_m","y_m","z_m","roll_rad_s","pitch_rad_s","yaw_rad_s"]]
 
     radarData['datetime'] = pd.to_datetime(radarData['datetime'], format='%Y-%m-%d %H:%M:%S.%f')
     teleData['datetime'] = pd.to_datetime(teleData['datetime'])
     print(radarData['datetime'][7],teleData['datetime'][7])
-    
+
+    mergedTeleRadar = pd.merge_asof(radarData, teleData, on='datetime', direction='nearest')
+    mergedTeleRadar =mergedTeleRadar.dropna(subset=['x_m'])
     print("teleData.shape: ", teleData.shape)
     print("radarData.shape: ", radarData.shape)
-    mergedTeleRadar = pd.merge_asof(radarData, teleData, on='datetime',tolerance=pd.Timedelta('100ms'), direction='nearest')
-    print("mergerdPcdDepth.shape: ",mergedTeleRadar.shape)
-    mergerdPcdDepth =mergedTeleRadar.dropna(subset=['x_m'])
-    print("200ms - mergerdPcdDepth after dropna.shape: ",mergerdPcdDepth.shape)
-    mergerdPcdDepth = pd.merge_asof(radarData, teleData, on='datetime',tolerance=pd.Timedelta('400ms'), direction='nearest')
-    print("mergerdPcdDepth.shape: ",mergerdPcdDepth.shape)
-    mergerdPcdDepth =mergerdPcdDepth.dropna(subset=['x_m'])
-    print("400ms - mergerdPcdDepth after dropna.shape: ",mergerdPcdDepth.shape)
-    mergerdPcdDepth = pd.merge_asof(radarData, teleData, on='datetime',tolerance=pd.Timedelta('600ms'), direction='nearest')
-    print("mergerdPcdDepth.shape: ",mergerdPcdDepth.shape)
-    mergerdPcdDepth =mergerdPcdDepth.dropna(subset=['x_m'])
-    print("600ms - mergerdPcdDepth after dropna.shape: ",mergerdPcdDepth.shape)
-    mergerdPcdDepth = pd.merge_asof(radarData, teleData, on='datetime',tolerance=pd.Timedelta('800ms'), direction='nearest')
-    print("mergerdPcdDepth.shape: ",mergerdPcdDepth.shape)
-    mergerdPcdDepth = mergerdPcdDepth.dropna(subset=['x_m'])
-    print("800ms - mergerdPcdDepth after dropna.shape: ",mergerdPcdDepth.shape)
-    mergerdPcdDepth = pd.merge_asof(radarData, teleData, on='datetime',tolerance=pd.Timedelta('1000ms'), direction='nearest')
-    print("mergerdPcdDepth.shape: ",mergerdPcdDepth.shape)
-    mergerdPcdDepth = mergerdPcdDepth.dropna(subset=['x_m'])
-    print("1000ms - mergerdPcdDepth after dropna.shape: ",mergerdPcdDepth.shape)
-    print("mergedTeleRadar.shape: ", mergedTeleRadar.shape)
-    mergedTeleRadar.to_csv("mergedTeleRadar.csv",index=False)
-
+    print("200ms - mergedTeleRadar after dropna.shape: ",mergedTeleRadar.shape)
+    # mergedTeleRadar.to_csv("mergedTeleRadar.csv",index=False)
     # cmap = plt.colormaps.get_cmap("tab20", 20)
     cmap = cm.get_cmap("tab20", 20)
     if visulization :
         
         for index,row in mergedTeleRadar.iterrows():
+            
             frames = 10
-            # Add break condition if there aren't enough frames left to process
             if index >= len(mergedTeleRadar) - frames:
                 break
             x_coords = [e for elm in mergedTeleRadar['x_coord'][index:index + frames] for e in elm]
@@ -141,7 +128,7 @@ if __name__ == "__main__":
             sns.set(style="whitegrid")
             fig = plt.figure(figsize=(12,6))
             ax1 = fig.add_subplot(121,projection='3d')
-            img1 = ax1.scatter(x_coords, y_coords, z_coords, c = colors, cmap = 'viridis', marker='o')
+            img1 = ax1.scatter(x_coords, y_coords, z_coords, c = colors, marker='o')
             fig.colorbar(img1)
             ax1.set_title('Radar PCD')
             ax1.set_xlabel('X')
@@ -162,18 +149,13 @@ if __name__ == "__main__":
             for centroid_id, centroid in valid_centroids:
                 color = cmap(centroid_id % 20)  # Assign unique color based on ID
                 ax1.scatter(centroid[0], centroid[1], centroid[2], marker='o', s=200, color=color, label=f'Cluster ID {centroid_id}')
-
-
+            print(f"Index: {index}")
             ax2 = fig.add_subplot(122,projection='3d')
-            # for elm in mergedTeleRadar['x_m'][index:index + frames]:
-            #     print(elm)
-                
-
-
-            x_t = [e for elm in mergedTeleRadar['x_m'][index:index + frames] for e in elm]
-            y_t = [e for elm in mergedTeleRadar['y_m'][index:index + frames] for e in elm]
-            z_t = [e for elm in mergedTeleRadar['z_m'][index:index + frames] for e in elm]
-            img2 = ax2.scatter(x_t, y_t,z_t, cmap = 'viridis',marker='o')
+            x_t = [elm for elm in mergedTeleRadar['x_m'][index:index + frames]]
+            print(x_t)
+            y_t = [elm for elm in mergedTeleRadar['y_m'][index:index + frames]]
+            z_t = [elm for elm in mergedTeleRadar['z_m'][index:index + frames]]  
+            img2 = ax2.scatter(x_t, y_t, z_t,marker='o')
             fig.colorbar(img2)
             ax2.set_title('Telemetry UAV')
             ax2.set_xlabel('X')
@@ -189,8 +171,8 @@ if __name__ == "__main__":
             plt.savefig(f"./visualization/merged/radarDepth__{str(index)}.png")
             # plt.show()
             plt.close()
-            if index ==3:
-                break
+            # if index ==3:
+            #     break
         print("Sample Visulization Saved")
     
 

@@ -6,3 +6,4 @@ tempCodeRunnerFile.py
 .vscode
 **/__pycache__/
 *.gif
+*.csv
