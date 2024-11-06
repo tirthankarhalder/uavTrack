@@ -88,9 +88,8 @@ if __name__ == "__main__":
         datetime_obj = pd.to_datetime(time_current, format='%Y-%d-%m %H:%M:%S.%f')
         new_datetime_obj = datetime_obj + relativedelta(months=1)
         new_timestamp = new_datetime_obj.strftime('%Y-%m-%d %H:%M:%S.%f')
-        time_frames.append(time_current.strftime('%Y-%d-%m %H:%M:%S.%f'))
-        radarData.loc[index, 'datetime']  = time_current.strftime('%Y-%d-%m %H:%M:%S.%f') 
-
+        # time_frames.append(new_timestamp.strftime('%Y-%d-%m %H:%M:%S.%f'))
+        radarData.loc[index, 'datetime']  = new_timestamp 
         frameID +=1
     print("Dropping NAN rows")
     radarData = radarData.dropna()
@@ -113,10 +112,8 @@ if __name__ == "__main__":
     # mergedTeleRadar.to_csv("mergedTeleRadar.csv",index=False)
     # cmap = plt.colormaps.get_cmap("tab20", 20)
     cmap = cm.get_cmap("tab20", 20)
-    if visulization :
-        
-        for index,row in mergedTeleRadar.iterrows():
-            
+    if visulization : 
+        for index,row in mergedTeleRadar.iterrows(): 
             frames = 10
             if index >= len(mergedTeleRadar) - frames:
                 break
@@ -134,9 +131,9 @@ if __name__ == "__main__":
             ax1.set_xlabel('X')
             ax1.set_ylabel('Y')
             ax1.set_zlabel('Z')
-            ax1.set_xlim(-10, 10)
-            ax1.set_ylim(0, 10)
-            ax1.set_zlim(-3, 10)
+            ax1.set_xlim(-7, 9)
+            ax1.set_ylim(-5, 6)
+            ax1.set_zlim(-1, 3)
 
             data = np.array([x_coords, y_coords, z_coords]).T
             clustering = DBSCAN(eps=1, min_samples=15).fit(data)
@@ -161,10 +158,9 @@ if __name__ == "__main__":
             ax2.set_xlabel('X')
             ax2.set_ylabel('Y')
             ax2.set_zlabel('Z')
-            ax2.set_xlim(-10, 10)
-            ax2.set_ylim(0, 10)
-            ax2.set_zlim(-3, 10)
-
+            ax2.set_xlim(-7, 9)
+            ax2.set_ylim(-5, 6)
+            ax2.set_zlim(-1, 3)
 
             plt.legend()
             plt.tight_layout()
@@ -174,6 +170,8 @@ if __name__ == "__main__":
             # if index ==3:
             #     break
         print("Sample Visulization Saved")
+
+
     
 
     # plotPath = "./visualization/" + visFile
